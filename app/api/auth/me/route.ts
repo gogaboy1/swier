@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import Database from 'better-sqlite3'
-import path from 'path'
+import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 
 export async function GET() {
@@ -11,16 +10,20 @@ export async function GET() {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    const dbPath = path.join(process.cwd(), 'prisma', 'dev.db')
-    const db = new Database(dbPath, { readonly: true })
-
-    const user = db.prepare(`
-      SELECT id, email, name, avatar, bio, instagram, telegram, location, createdAt
-      FROM User
-      WHERE id = ?
-    `).get(currentUser.userId) as any
-
-    db.close()
+    const user = await prisma.user.findUnique({
+      where: { id: currentUser.userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatar: true,
+        bio: true,
+        instagram: true,
+        telegram: true,
+        location: true,
+        createdAt: true
+      }
+    })
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })

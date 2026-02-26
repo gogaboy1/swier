@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Database from 'better-sqlite3'
-import path from 'path'
+import { prisma } from '@/lib/prisma'
 import { verifyPassword, generateToken } from '@/lib/auth'
 import { cookies } from 'next/headers'
 
@@ -12,13 +11,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
     }
 
-    const dbPath = path.join(process.cwd(), 'prisma', 'dev.db')
-    const db = new Database(dbPath, { readonly: true })
-
     // Find user
-    const user = db.prepare('SELECT id, email, password, name FROM User WHERE email = ?').get(email) as any
-
-    db.close()
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        name: true
+      }
+    })
 
     if (!user) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })

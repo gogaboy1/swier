@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
-import Database from 'better-sqlite3'
-import path from 'path'
+import { prisma } from '@/lib/prisma'
 
 export async function PUT(request: NextRequest) {
   try {
@@ -12,22 +11,28 @@ export async function PUT(request: NextRequest) {
 
     const { name, bio, instagram, telegram, location, avatar } = await request.json()
 
-    const dbPath = path.join(process.cwd(), 'prisma', 'dev.db')
-    const db = new Database(dbPath)
-
-    db.prepare(`
-      UPDATE User 
-      SET name = ?, bio = ?, instagram = ?, telegram = ?, location = ?, avatar = ?
-      WHERE id = ?
-    `).run(name, bio, instagram, telegram, location, avatar, currentUser.userId)
-
-    const updatedUser = db.prepare(`
-      SELECT id, email, name, avatar, bio, instagram, telegram, location, createdAt
-      FROM User
-      WHERE id = ?
-    `).get(currentUser.userId)
-
-    db.close()
+    const updatedUser = await prisma.user.update({
+      where: { id: currentUser.userId },
+      data: {
+        name,
+        bio,
+        instagram,
+        telegram,
+        location,
+        avatar
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatar: true,
+        bio: true,
+        instagram: true,
+        telegram: true,
+        location: true,
+        createdAt: true
+      }
+    })
 
     return NextResponse.json({ user: updatedUser })
   } catch (error) {

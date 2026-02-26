@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Database from 'better-sqlite3'
-import path from 'path'
+import { prisma } from '@/lib/prisma'
 import { hashPassword, generateToken } from '@/lib/auth'
 import { cookies } from 'next/headers'
 
@@ -20,13 +19,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
     }
 
-    const dbPath = path.join(process.cwd(), 'prisma', 'dev.db')
-    const db = new Database(dbPath)
-
     // Check if user already exists
-    const existingUser = db.prepare('SELECT id FROM User WHERE email = ?').get(email)
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    })
+    
     if (existingUser) {
-      db.close()
       return NextResponse.json({ error: 'User with this email already exists' }, { status: 400 })
     }
 
@@ -34,15 +32,15 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await hashPassword(password)
 
     // Create user
-    const userId = generateId()
-    const createdAt = new Date().toISOString()
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name: name || null
+      }
+    })
 
-    db.prepare(`
-      INSERT INTO User (id, email, password, name, createdAt)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(userId, email, hashedPassword, name || null, createdAt)
-
-    db.close()
+    const userId = user.id
 
     // Generate JWT token
     const token = await generateToken(userId, email)
@@ -58,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      user: { id: userId, email, name }
+      user: { id: user.id, email: user.email, name: user.name }
     })
   } catch (error: any) {
     console.error('Signup error:', error)
