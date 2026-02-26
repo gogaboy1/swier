@@ -179,7 +179,7 @@ export default function SubmitPage() {
               onChange={handleChange}
               required
               className="w-full px-5 py-3.5 bg-white/50 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-gray-900 font-medium placeholder:text-gray-400"
-              placeholder="Например: StartSwipe"
+              placeholder="Например: Swier"
             />
           </div>
 

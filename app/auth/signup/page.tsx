@@ -73,7 +73,7 @@ export default function SignUpPage() {
         {/* Logo/Title */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            StartSwipe
+            Swier
           </h1>
           <p className="text-gray-600">Создайте аккаунт</p>
         </div>

@@ -3,7 +3,7 @@ import "./globals.css";
 import "./swipe-overlay.css";
 
 export const metadata: Metadata = {
-  title: "StartSwipe - Найди свой стартап",
+  title: "Swier - Найди свой стартап",
   description: "Tinder для стартапов и инвесторов",
 };
 
