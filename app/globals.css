@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f9fafb;
+  --foreground: #1e293b;
 }
 
 @theme inline {
@@ -19,8 +19,52 @@
   }
 }
 
+/* Dark theme - soft dark mode */
+html.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Apple Glassmorphism Utilities */
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)];
+  }
+  
+  .glass-panel-dark {
+    @apply bg-slate-900/70 backdrop-blur-xl border border-slate-700/50 shadow-[0_8px_30px_rgb(0,0,0,0.2)];
+  }
+
+  .glass-button {
+    @apply bg-white/80 backdrop-blur-lg border border-white/40 shadow-sm rounded-full transition-all duration-200 ease-out hover:scale-105 active:scale-95 hover:bg-white;
+  }
+  
+  .glass-button-dark {
+    @apply bg-slate-800/80 backdrop-blur-lg border border-slate-700/50 shadow-sm rounded-full transition-all duration-200 ease-out hover:scale-105 active:scale-95 hover:bg-slate-800;
+  }
+
+  .glass-bottom-sheet {
+    @apply bg-white/90 backdrop-blur-2xl border-t border-white/20 shadow-[0_-8px_30px_rgb(0,0,0,0.08)] rounded-t-3xl;
+  }
+
+  .ios-shadow {
+    box-shadow: 0 4px 24px -6px rgba(0, 0, 0, 0.08), 0 2px 8px -2px rgba(0, 0, 0, 0.04);
+  }
+  
+  .ios-modal-shadow {
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Hide scrollbar for category filter */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }

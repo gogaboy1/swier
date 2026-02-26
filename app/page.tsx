@@ -1,65 +1,169 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useEffect } from 'react'
+import SwipeStack from '@/components/SwipeStack'
+import Header from '@/components/Header'
+import AuthModal from '@/components/AuthModal'
+import { useAuth } from '@/hooks/useAuth'
+
+interface Startup {
+  id: string
+  name: string
+  logo: string | null
+  shortDescription: string
+  geo: string
+  stage: string
+  tags: string
+}
+
+interface UndoItem {
+  startup: Startup
+  direction: 'left' | 'right'
+}
 
 export default function Home() {
+  const { user } = useAuth()
+  const [geo, setGeo] = useState<'Russia' | 'Worldwide'>('Russia')
+  const [category, setCategory] = useState<string | null>(null)
+  const [startups, setStartups] = useState<Startup[]>([])
+  const [loading, setLoading] = useState(true)
+  const [undoHistory, setUndoHistory] = useState<UndoItem[]>([])
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+
+  useEffect(() => {
+    // Load undo history from localStorage
+    const savedHistory = localStorage.getItem('undoHistory')
+    if (savedHistory) {
+      try {
+        setUndoHistory(JSON.parse(savedHistory))
+      } catch (e) {
+        console.error('Failed to load undo history:', e)
+      }
+    }
+    fetchStartups()
+  }, [])
+
+  useEffect(() => {
+    fetchStartups()
+  }, [geo, category])
+
+  const fetchStartups = async () => {
+    setLoading(true)
+    try {
+      const url = `/api/startups-direct?geo=${geo}${category ? `&category=${category}` : ''}`
+      const response = await fetch(url)
+      const data = await response.json()
+      setStartups(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Error fetching startups:', error)
+      setStartups([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSwipe = async (direction: 'left' | 'right', startupId: string) => {
+    // Check if user is authenticated
+    if (!user) {
+      setAuthModalOpen(true)
+      return
+    }
+
+    try {
+      // Find the swiped startup
+      const swipedStartup = startups.find(s => s.id === startupId)
+      
+      if (swipedStartup) {
+        // Add to undo history (max 5 items)
+        const newHistory = [{ startup: swipedStartup, direction }, ...undoHistory].slice(0, 5)
+        setUndoHistory(newHistory)
+        localStorage.setItem('undoHistory', JSON.stringify(newHistory))
+      }
+
+      // Record swipe in API
+      if (direction === 'right') {
+        await fetch('/api/like-direct', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ startupId })
+        })
+      } else {
+        await fetch('/api/dislike-direct', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ startupId })
+        })
+      }
+    } catch (error) {
+      console.error('Error recording swipe:', error)
+    }
+  }
+
+  const handleUndo = async () => {
+    if (undoHistory.length === 0) return
+
+    const [lastItem, ...restHistory] = undoHistory
+    
+    // Remove from undo history
+    setUndoHistory(restHistory)
+    localStorage.setItem('undoHistory', JSON.stringify(restHistory))
+
+    // Remove the like/dislike from API
+    if (lastItem.direction === 'right') {
+      await fetch('/api/like-direct', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ startupId: lastItem.startup.id })
+      })
+    } else {
+      await fetch('/api/dislike-direct', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ startupId: lastItem.startup.id })
+      })
+    }
+
+    // Re-fetch startups to get fresh list without the removed card
+    await fetchStartups()
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <div className="min-h-screen bg-gray-50 overflow-hidden fixed inset-0 flex flex-col">
+      {/* Header with Profile and Geo Toggle */}
+      <Header 
+        geo={geo} 
+        onGeoChange={setGeo}
+        selectedCategory={category}
+        onCategoryChange={setCategory}
+        likesCount={0}
+      />
+      
+      {/* Swipe Stack - Full Height */}
+      <div className="flex-1 relative min-h-0">
+        <div className="max-w-md mx-auto px-4 h-full">
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="relative">
+                <div className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></div>
+                <div className="relative inline-flex rounded-full h-12 w-12 bg-blue-500"></div>
+              </div>
+            </div>
+          ) : (
+            <SwipeStack 
+              startups={startups} 
+              onSwipe={handleSwipe}
+              undoCount={undoHistory.length}
+              onUndo={handleUndo}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          )}
         </div>
-      </main>
+      </div>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={authModalOpen} 
+        onClose={() => setAuthModalOpen(false)} 
+      />
     </div>
-  );
+  )
 }

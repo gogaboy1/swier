@@ -1,0 +1,53 @@
+/* Swipe overlay animations */
+.swipe-card {
+  position: relative;
+}
+
+/* Restrict TinderCard movement - keep cards centered */
+.tinder-card-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  touch-action: pan-x !important;
+  -ms-touch-action: pan-x !important;
+}
+
+/* Prevent vertical dragging */
+.tinder-card-container > div {
+  touch-action: pan-x !important;
+  -ms-touch-action: pan-x !important;
+}
+
+.swipe-card-inner {
+  touch-action: pan-x !important;
+  -ms-touch-action: pan-x !important;
+}
+
+/* When card is being swiped, detect transform and show overlay */
+.swipe-card[style*="translateX"] .swipe-overlay-like,
+.swipe-card[style*="translateX"] .swipe-overlay-nope {
+  transition: background-color 0.1s ease-out;
+}
+
+/* Detect positive X translation (swipe right) */
+.swipe-card[style*="translateX("] .swipe-overlay-like {
+  background-color: rgba(34, 197, 94, 0.3) !important;
+}
+
+/* Detect negative X translation (swipe left) */
+.swipe-card[style*="translateX(-"] .swipe-overlay-nope {
+  background-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+/* Stronger overlay when swiping further */
+.swipe-card[style*="translateX(1"] .swipe-overlay-like,
+.swipe-card[style*="translateX(2"] .swipe-overlay-like,
+.swipe-card[style*="translateX(3"] .swipe-overlay-like {
+  background-color: rgba(34, 197, 94, 0.5) !important;
+}
+
+.swipe-card[style*="translateX(-1"] .swipe-overlay-nope,
+.swipe-card[style*="translateX(-2"] .swipe-overlay-nope,
+.swipe-card[style*="translateX(-3"] .swipe-overlay-nope {
+  background-color: rgba(239, 68, 68, 0.5) !important;
+}
