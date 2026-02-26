@@ -1,6 +1,8 @@
-# Startup Swipe - Tinder for Startups
+# Swier - Tinder for Startups
 
 A mobile-first web application for discovering and connecting with startups from Russia and Worldwide. Swipe right to like, swipe left to skip!
+
+<!-- Using Supabase PostgreSQL for production database -->
 
 ## 🚀 Quick Deploy
 
