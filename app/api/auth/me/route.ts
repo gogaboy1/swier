@@ -15,11 +15,9 @@ export async function GET() {
     const db = new Database(dbPath, { readonly: true })
 
     const user = db.prepare(`
-      SELECT u.id, u.email, u.name, u.avatar, u.createdAt,
-             p.bio, p.instagram, p.telegram, p.location
-      FROM User u
-      LEFT JOIN Profile p ON u.id = p.userId
-      WHERE u.id = ?
+      SELECT id, email, name, avatar, bio, instagram, telegram, location, createdAt
+      FROM User
+      WHERE id = ?
     `).get(currentUser.userId) as any
 
     db.close()

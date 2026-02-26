@@ -6,6 +6,10 @@ export async function POST(request: NextRequest) {
   try {
     const { password } = await request.json()
     
+    console.log('Received password:', password)
+    console.log('Expected password:', process.env.ADMIN_PASSWORD)
+    console.log('Passwords match:', password === process.env.ADMIN_PASSWORD)
+    
     if (!password) {
       return NextResponse.json({ error: 'Password required' }, { status: 400 })
     }

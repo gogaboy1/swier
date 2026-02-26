@@ -60,11 +60,17 @@ model Dislike {
 }
 
 model User {
-  id       String    @id @default(uuid())
-  email    String    @unique
-  password String
-  name     String?
-  comments Comment[]
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String
+  name      String?
+  avatar    String?
+  bio       String?
+  instagram String?
+  telegram  String?
+  location  String?
+  createdAt DateTime  @default(now())
+  comments  Comment[]
 }
 
 model Comment {
