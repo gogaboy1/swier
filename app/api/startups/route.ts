@@ -34,10 +34,10 @@ export async function GET(request: NextRequest) {
         })
       ])
       
-      const likedIds = new Set(likes.map(l => l.startupId))
-      const dislikedIds = new Set(dislikes.map(d => d.startupId))
+      const likedIds = new Set(likes.map((l: any) => l.startupId))
+      const dislikedIds = new Set(dislikes.map((d: any) => d.startupId))
       
-      startups = startups.filter(s => !likedIds.has(s.id) && !dislikedIds.has(s.id))
+      startups = startups.filter((s: any) => !likedIds.has(s.id) && !dislikedIds.has(s.id))
     }
     
     return NextResponse.json(startups)
