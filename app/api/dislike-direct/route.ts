@@ -1,15 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Database from 'better-sqlite3'
-import path from 'path'
+import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
-
-function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,20 +15,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing startupId' }, { status: 400 })
     }
     
-    const dbPath = path.join(process.cwd(), 'prisma', 'dev.db')
-    const db = new Database(dbPath)
-    
     // Check if already disliked
-    const existing = db.prepare('SELECT id FROM Dislike WHERE userId = ? AND startupId = ?').get(currentUser.userId, startupId)
+    const existing = await prisma.dislike.findFirst({
+      where: {
+        userId: currentUser.userId,
+        startupId: startupId
+      }
+    })
     
     if (!existing) {
-      db.prepare(`
-        INSERT INTO Dislike (id, userKey, userId, startupId, createdAt)
-        VALUES (?, ?, ?, ?, datetime('now'))
-      `).run(generateUUID(), currentUser.userId, currentUser.userId, startupId)
+      await prisma.dislike.create({
+        data: {
+          userId: currentUser.userId,
+          startupId: startupId
+        }
+      })
     }
-    
-    db.close()
     
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -59,12 +52,12 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Missing startupId' }, { status: 400 })
     }
     
-    const dbPath = path.join(process.cwd(), 'prisma', 'dev.db')
-    const db = new Database(dbPath)
-    
-    db.prepare('DELETE FROM Dislike WHERE userId = ? AND startupId = ?').run(currentUser.userId, startupId)
-    
-    db.close()
+    await prisma.dislike.deleteMany({
+      where: {
+        userId: currentUser.userId,
+        startupId: startupId
+      }
+    })
     
     return NextResponse.json({ success: true })
   } catch (error) {
