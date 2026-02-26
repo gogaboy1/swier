@@ -1,17 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Database from 'better-sqlite3'
-import path from 'path'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
-    const dbPath = path.join(process.cwd(), 'prisma', 'dev.db')
-    const db = new Database(dbPath, { readonly: true })
+    const startups = await prisma.startup.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        _count: {
+          select: {
+            likes: true,
+            comments: true
+          }
+        }
+      }
+    })
+
+    // Fetch user info for each startup
+    const startupsWithUsers = await Promise.all(
+      startups.map(async (startup) => {
+        if (startup.userId) {
+          const user = await prisma.user.findUnique({
+            where: { id: startup.userId },
+            select: { email: true, name: true }
+          })
+          return {
+            ...startup,
+            userEmail: user?.email,
+            userName: user?.name
+          }
+        }
+        return startup
+      })
+    )
     
-    const startups = db.prepare('SELECT * FROM Startup ORDER BY createdAt DESC').all()
-    
-    db.close()
-    
-    return NextResponse.json(startups)
+    return NextResponse.json(startupsWithUsers)
   } catch (error) {
     console.error('Error fetching startups:', error)
     return NextResponse.json({ error: 'Failed to fetch startups' }, { status: 500 })
@@ -26,29 +48,23 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Missing startup ID' }, { status: 400 })
     }
     
-    const dbPath = path.join(process.cwd(), 'prisma', 'dev.db')
-    const db = new Database(dbPath)
-    
-    // Add rejectReason column if it doesn't exist
-    try {
-      db.prepare('ALTER TABLE Startup ADD COLUMN rejectReason TEXT').run()
-    } catch (e) {
-      // Column already exists
-    }
+    const updateData: any = {}
     
     if (status !== undefined) {
+      updateData.status = status
       if (status === 'rejected' && rejectReason) {
-        db.prepare('UPDATE Startup SET status = ?, rejectReason = ?, updatedAt = datetime(\'now\') WHERE id = ?').run(status, rejectReason, id)
-      } else {
-        db.prepare('UPDATE Startup SET status = ?, updatedAt = datetime(\'now\') WHERE id = ?').run(status, id)
+        updateData.rejectReason = rejectReason
       }
     }
     
     if (isFeatured !== undefined) {
-      db.prepare('UPDATE Startup SET isFeatured = ?, updatedAt = datetime(\'now\') WHERE id = ?').run(isFeatured ? 1 : 0, id)
+      updateData.isFeatured = isFeatured
     }
     
-    db.close()
+    await prisma.startup.update({
+      where: { id },
+      data: updateData
+    })
     
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -65,12 +81,9 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Missing startup ID' }, { status: 400 })
     }
     
-    const dbPath = path.join(process.cwd(), 'prisma', 'dev.db')
-    const db = new Database(dbPath)
-    
-    db.prepare('DELETE FROM Startup WHERE id = ?').run(id)
-    
-    db.close()
+    await prisma.startup.delete({
+      where: { id }
+    })
     
     return NextResponse.json({ success: true })
   } catch (error) {

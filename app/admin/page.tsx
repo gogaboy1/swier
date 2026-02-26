@@ -17,6 +17,9 @@ interface Startup {
   tags: string
   status: string
   createdAt: string
+  userId: string | null
+  userEmail?: string
+  userName?: string
 }
 
 interface AdminStats {
@@ -228,15 +231,15 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-8">
+      <div className="max-w-6xl mx-auto px-4 py-4 sm:py-8">
+        <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
           <button
             onClick={() => router.push('/')}
             className="w-10 h-10 glass-button flex items-center justify-center text-gray-700"
           >
             <ArrowLeft className="w-5 h-5" strokeWidth={2.5} />
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
             Админ-панель
           </h1>
         </div>
@@ -249,7 +252,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <button
             onClick={() => setFilter(filter === 'pending' ? 'all' : 'pending')}
             className={`glass-panel rounded-3xl p-5 text-left transition-all duration-200 active:scale-95 hover:bg-white/80 ${
@@ -463,7 +466,7 @@ function StartupCard({
             {startup.shortDescription}
           </p>
           {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1 mb-2">
               {tags.map((tag, index) => (
                 <span
                   key={index}
@@ -472,6 +475,26 @@ function StartupCard({
                   {tag.trim()}
                 </span>
               ))}
+            </div>
+          )}
+          {startup.userId && (
+            <div className="mt-2 pt-2 border-t border-gray-100">
+              <p className="text-xs text-gray-500 mb-1">Подал пользователь:</p>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-xs font-bold">
+                    {startup.userName ? startup.userName.charAt(0).toUpperCase() : startup.userEmail?.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  {startup.userName && (
+                    <p className="text-xs font-medium text-gray-900 truncate">{startup.userName}</p>
+                  )}
+                  {startup.userEmail && (
+                    <p className="text-xs text-gray-500 truncate">{startup.userEmail}</p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>
