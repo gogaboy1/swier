@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       }
     })
     
-    const startups = likes.map(like => like.startup)
+    const startups = likes.map((like: any) => like.startup)
     
     return NextResponse.json(startups)
   } catch (error) {
