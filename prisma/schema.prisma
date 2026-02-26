@@ -40,24 +40,28 @@ model Startup {
 
 model Like {
   id        String   @id @default(uuid())
-  userKey   String
+  userKey   String?
+  userId    String?
   startupId String
   createdAt DateTime @default(now())
 
   startup Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
 
   @@unique([userKey, startupId])
+  @@unique([userId, startupId])
 }
 
 model Dislike {
   id        String   @id @default(uuid())
-  userKey   String
+  userKey   String?
+  userId    String?
   startupId String
   createdAt DateTime @default(now())
 
   startup Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
 
   @@unique([userKey, startupId])
+  @@unique([userId, startupId])
 }
 
 model User {
