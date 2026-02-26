@@ -46,8 +46,18 @@ export async function POST(request: NextRequest) {
       success: true,
       user: { id: user.id, email: user.email, name: user.name }
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Signin error:', error)
-    return NextResponse.json({ error: 'Failed to sign in' }, { status: 500 })
+    
+    // Check if it's a database error (SQLite not working on Vercel)
+    if (error.message?.includes('SQLITE') || error.message?.includes('database') || error.code === 'SQLITE_CANTOPEN') {
+      return NextResponse.json({ 
+        error: 'Database is currently unavailable. Please try again later or contact support.' 
+      }, { status: 503 })
+    }
+    
+    return NextResponse.json({ 
+      error: error.message || 'Failed to sign in' 
+    }, { status: 500 })
   }
 }
