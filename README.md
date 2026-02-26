@@ -2,6 +2,12 @@
 
 A mobile-first web application for discovering and connecting with startups from Russia and Worldwide. Swipe right to like, swipe left to skip!
 
+## 🚀 Quick Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/gogaboy1/swier&env=JWT_SECRET,ADMIN_PASSWORD,NEXT_PUBLIC_APP_URL&envDescription=Required%20environment%20variables&envLink=https://github.com/gogaboy1/swier/blob/master/env.example&project-name=swier&repository-name=swier)
+
+Click the button above to deploy to Vercel in one click!
+
 ## Features
 
 - **Swipe Interface**: Real Tinder-style swipe gestures using react-tinder-card
